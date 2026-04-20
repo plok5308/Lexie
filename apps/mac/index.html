@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LEXIE Mac STT</title>
+  </head>
+  <body>
+    <main id="app">
+      <section class="shell">
+        <header>
+          <p class="eyebrow">LEXIE Mac</p>
+          <h1>Speech to Text</h1>
+        </header>
+
+        <div class="controls">
+          <button id="startButton" type="button">Start Recording</button>
+          <button id="stopButton" type="button" disabled>Stop Recording</button>
+        </div>
+
+        <p id="status" class="status">Idle</p>
+
+        <label class="transcriptLabel" for="transcript">Transcript</label>
+        <textarea id="transcript" readonly placeholder="Your transcript will appear here."></textarea>
+      </section>
+    </main>
+    <script type="module" src="/src/app.ts"></script>
+  </body>
+</html>

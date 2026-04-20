@@ -24,7 +24,7 @@ Shared events across STT, LLM, and TTS.
 
 - tts_started
 - tts_streaming
-- tts_complted
+- tts_completed
 - tts_error
 
 ### Session Events
