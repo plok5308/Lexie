@@ -12,5 +12,5 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["src", "../../packages/stt/src"]
+  "include": ["src", "../../packages/stt/src", "../../packages/llm/src"]
 }

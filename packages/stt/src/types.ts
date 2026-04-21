@@ -46,8 +46,10 @@ export class SttError extends Error {
 
 export interface SttProviderAdapter {
   transcribe(input: SttInput): Promise<SttOutput>;
+  stop?(): void;
 }
 
 export interface SttModule {
   transcribe(input: SttInput): Promise<SttOutput>;
+  stop(): void;
 }

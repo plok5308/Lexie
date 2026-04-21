@@ -26,6 +26,10 @@ class DefaultSttModule implements SttModule {
       );
     }
   }
+
+  stop(): void {
+    this.provider.stop?.();
+  }
 }
 
 function validateInput(input: SttInput): void {

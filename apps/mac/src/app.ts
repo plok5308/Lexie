@@ -1,37 +1,45 @@
-import { BrowserSpeechSttAdapter, createSttModule, SttError } from "../../../packages/stt/src";
+import { createMicrophoneSttModule, SttError } from "../../../packages/stt/src";
+import { createLlmAgent, LlmError } from "../../../packages/llm/src";
 import "./styles.css";
 
 const startButton = getElement<HTMLButtonElement>("startButton");
 const stopButton = getElement<HTMLButtonElement>("stopButton");
 const statusText = getElement<HTMLElement>("status");
 const transcriptText = getElement<HTMLTextAreaElement>("transcript");
+const llmResponseText = getElement<HTMLTextAreaElement>("llmResponse");
 
-const sttAdapter = new BrowserSpeechSttAdapter({
+const stt = createMicrophoneSttModule({
   language: "ko-KR",
   onTranscript: (result) => {
     transcriptText.value = result.text;
     setStatus(result.is_final ? "Heard final speech" : "Listening...");
   },
 });
-const stt = createSttModule(sttAdapter);
+const agent = createLlmAgent();
 let activeTranscription: Promise<void> | undefined;
 
 startButton.addEventListener("click", async () => {
   try {
     transcriptText.value = "";
+    llmResponseText.value = "";
     startButton.disabled = true;
     stopButton.disabled = false;
     setStatus("Starting Web STT... speak after the browser microphone prompt.");
 
     activeTranscription = stt
-      .transcribe({
-        kind: "microphone_stream",
-        stream: emptyMicrophoneStream(),
-        mimeType: "browser/speech-recognition",
-      })
-      .then((result) => {
+      .listen()
+      .then(async (result) => {
         transcriptText.value = result.text;
-        setStatus(result.is_final ? "Transcript ready" : "Partial transcript ready");
+
+        if (!result.text.trim()) {
+          setStatus("Nothing to ask — empty transcript.");
+          return;
+        }
+
+        setStatus("Asking LEXIE...");
+        const reply = await agent.respond({ userText: result.text });
+        llmResponseText.value = reply.assistantText;
+        setStatus("Response ready");
       })
       .catch((error: unknown) => {
         setStatus(formatError(error));
@@ -52,7 +60,7 @@ stopButton.addEventListener("click", async () => {
   try {
     stopButton.disabled = true;
     setStatus("Stopping Web STT...");
-    sttAdapter.stop();
+    stt.stop();
     await activeTranscription;
   } catch (error) {
     setStatus(formatError(error));
@@ -61,10 +69,6 @@ stopButton.addEventListener("click", async () => {
     stopButton.disabled = true;
   }
 });
-
-async function* emptyMicrophoneStream(): AsyncIterable<Uint8Array> {
-  return;
-}
 
 function getElement<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -83,6 +87,10 @@ function setStatus(message: string): void {
 function formatError(error: unknown): string {
   if (error instanceof SttError) {
     return `STT error: ${error.code} - ${error.message}`;
+  }
+
+  if (error instanceof LlmError) {
+    return `LLM error: ${error.code} - ${error.message}`;
   }
 
   if (error instanceof Error) {
