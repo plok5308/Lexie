@@ -89,3 +89,8 @@ textarea {
   color: #171717;
   background: #ffffff;
 }
+
+#ttsPlayer {
+  width: 100%;
+  margin-top: 16px;
+}

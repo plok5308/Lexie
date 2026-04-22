@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LEXIE Mac STT</title>
+    <title>LEXIE Mac Voice Chat</title>
   </head>
   <body>
     <main id="app">
       <section class="shell">
         <header>
           <p class="eyebrow">LEXIE Mac</p>
-          <h1>Speech to Text</h1>
+          <h1>Voice Chat</h1>
         </header>
 
         <div class="controls">
@@ -25,6 +25,8 @@
 
         <label class="transcriptLabel" for="llmResponse">LEXIE</label>
         <textarea id="llmResponse" readonly placeholder="LEXIE's reply will appear here."></textarea>
+
+        <audio id="ttsPlayer" controls></audio>
       </section>
     </main>
     <script type="module" src="/src/app.ts"></script>
