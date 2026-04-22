@@ -9,22 +9,23 @@
     <main id="app">
       <section class="shell">
         <header>
-          <p class="eyebrow">LEXIE Mac</p>
+          <p class="eyebrow">LEXIE Mac · 은행 상담원</p>
           <h1>Voice Chat</h1>
         </header>
 
         <div class="controls">
           <button id="startButton" type="button">Start Recording</button>
           <button id="stopButton" type="button" disabled>Stop Recording</button>
+          <button id="resetButton" type="button" class="secondary">새 대화</button>
         </div>
 
         <p id="status" class="status">Idle</p>
 
-        <label class="transcriptLabel" for="transcript">Transcript</label>
-        <textarea id="transcript" readonly placeholder="Your transcript will appear here."></textarea>
+        <label class="transcriptLabel" for="transcript">방금 말한 내용</label>
+        <textarea id="transcript" readonly placeholder="마이크로 말하면 여기에 표시됩니다."></textarea>
 
-        <label class="transcriptLabel" for="llmResponse">LEXIE</label>
-        <textarea id="llmResponse" readonly placeholder="LEXIE's reply will appear here."></textarea>
+        <label class="transcriptLabel" for="conversationLog">대화 기록</label>
+        <textarea id="conversationLog" readonly placeholder="대화가 누적되어 표시됩니다."></textarea>
 
         <audio id="ttsPlayer" controls></audio>
       </section>

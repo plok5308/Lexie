@@ -1,13 +1,19 @@
 import { createMicrophoneSttModule, SttError } from "../../../packages/stt/src";
-import { createLlmAgent, LlmError } from "../../../packages/llm/src";
+import {
+  ConversationSession,
+  createLlmAgent,
+  LlmError,
+  bankTellerSystemPrompt,
+} from "../../../packages/llm/src";
 import { createTtsProvider, TtsError } from "../../../packages/tts/src";
 import "./styles.css";
 
 const startButton = getElement<HTMLButtonElement>("startButton");
 const stopButton = getElement<HTMLButtonElement>("stopButton");
+const resetButton = getElement<HTMLButtonElement>("resetButton");
 const statusText = getElement<HTMLElement>("status");
 const transcriptText = getElement<HTMLTextAreaElement>("transcript");
-const llmResponseText = getElement<HTMLTextAreaElement>("llmResponse");
+const conversationLog = getElement<HTMLTextAreaElement>("conversationLog");
 const audioPlayer = getElement<HTMLAudioElement>("ttsPlayer");
 
 const stt = createMicrophoneSttModule({
@@ -17,15 +23,16 @@ const stt = createMicrophoneSttModule({
     setStatus(result.is_final ? "Heard final speech" : "Listening...");
   },
 });
-const agent = createLlmAgent();
+const agent = createLlmAgent({ systemPrompt: bankTellerSystemPrompt });
+const session = new ConversationSession({ agent });
 const tts = createTtsProvider();
+
 let activeTranscription: Promise<void> | undefined;
 let lastAudioUrl: string | undefined;
 
 startButton.addEventListener("click", async () => {
   try {
     transcriptText.value = "";
-    llmResponseText.value = "";
     startButton.disabled = true;
     stopButton.disabled = false;
     setStatus("Starting Web STT... speak after the browser microphone prompt.");
@@ -41,8 +48,8 @@ startButton.addEventListener("click", async () => {
         }
 
         setStatus("Asking LEXIE...");
-        const reply = await agent.respond({ userText: result.text });
-        llmResponseText.value = reply.assistantText;
+        const reply = await session.send(result.text);
+        appendTurn(result.text, reply.assistantText);
 
         setStatus("Synthesizing voice...");
         await speak(reply.assistantText);
@@ -76,6 +83,19 @@ stopButton.addEventListener("click", async () => {
   }
 });
 
+resetButton.addEventListener("click", () => {
+  session.reset();
+  conversationLog.value = "";
+  transcriptText.value = "";
+  audioPlayer.removeAttribute("src");
+  audioPlayer.load();
+  if (lastAudioUrl) {
+    URL.revokeObjectURL(lastAudioUrl);
+    lastAudioUrl = undefined;
+  }
+  setStatus("새 대화를 시작합니다.");
+});
+
 async function speak(text: string): Promise<void> {
   const audio = await tts.synthesize({ text });
 
@@ -102,11 +122,16 @@ async function speak(text: string): Promise<void> {
 
   audioPlayer.src = lastAudioUrl;
   await audioPlayer.play().catch(() => {
-    // Autoplay policies may require a user gesture; the click that triggered
-    // the flow counts, but if the tab lost focus we surface the <audio>
-    // controls so the user can press play.
+    // Autoplay may be blocked if the tab lost focus — the <audio> controls
+    // stay visible so the user can press play manually.
   });
   setStatus("Response spoken");
+}
+
+function appendTurn(userText: string, assistantText: string): void {
+  const block = `고객: ${userText}\n렉시: ${assistantText}\n\n`;
+  conversationLog.value += block;
+  conversationLog.scrollTop = conversationLog.scrollHeight;
 }
 
 function getElement<T extends HTMLElement>(id: string): T {
