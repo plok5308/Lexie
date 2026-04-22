@@ -14,12 +14,17 @@
         </header>
 
         <div class="controls">
-          <button id="startButton" type="button">Start Recording</button>
-          <button id="stopButton" type="button" disabled>Stop Recording</button>
+          <button id="startButton" type="button">Start Session</button>
+          <button id="stopButton" type="button" disabled>Stop Session</button>
           <button id="resetButton" type="button" class="secondary">새 대화</button>
         </div>
 
-        <p id="status" class="status">Idle</p>
+        <div id="stateIndicator" class="state state-idle">
+          <span class="stateDot"></span>
+          <span id="stateLabel" class="stateLabel">대기 중</span>
+        </div>
+
+        <p id="status" class="status">세션이 시작되지 않았습니다.</p>
 
         <label class="transcriptLabel" for="transcript">방금 말한 내용</label>
         <textarea id="transcript" readonly placeholder="마이크로 말하면 여기에 표시됩니다."></textarea>

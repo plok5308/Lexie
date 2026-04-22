@@ -28,16 +28,16 @@ Primary envrionment for early product validation.
 ## Local STT + LLM + TTS Test App
 
 This directory contains a minimal browser-based Mac test app that exercises the
-STT, LLM, and TTS modules end to end: microphone → transcript → LLM reply →
-spoken audio.
+STT, LLM, and TTS modules end to end: microphone → VAD → transcript → LLM reply
+→ spoken audio.
 
 Current scope:
 
-- microphone input
-- start / stop recording
-- show transcript
-- send final transcript to the LLM and show the reply
-- synthesize the reply with ElevenLabs and play it back
+- always-on microphone with local VAD (Silero via `@ricky0123/vad-web`)
+- speech start/end detection — no button press per turn
+- each segment transcribed with OpenAI Whisper
+- multi-turn conversation (bank teller persona) with "새 대화" reset
+- reply synthesized with ElevenLabs and played back; listening pauses while TTS plays
 
 The app uses `packages/stt` (browser speech recognition adapter), `packages/llm`
 (OpenAI provider), and `packages/tts` (ElevenLabs provider) through their public
@@ -56,8 +56,9 @@ npm run dev
 
 ### Env
 
-- `VITE_OPENAI_API_KEY` — required for real LLM replies. Without it, the app falls back to `MockLlmProvider`.
-- `VITE_OPENAI_MODEL` — optional, defaults to `gpt-4o-mini`.
+- `VITE_OPENAI_API_KEY` — required for both LLM (chat) and STT (Whisper). Without it, LLM falls back to `MockLlmProvider` and VAD STT will error.
+- `VITE_OPENAI_MODEL` — optional chat model, defaults to `gpt-4o-mini`.
+- `VITE_OPENAI_STT_MODEL` — optional transcription model, defaults to `whisper-1`.
 - `VITE_ELEVENLABS_API_KEY` — required for real voice output. Without it, the app falls back to `MockTtsProvider` (no audio).
 - `VITE_ELEVENLABS_VOICE_ID` — required. Paste a voice id from your ElevenLabs library. We don't call `voices.get_all`, so the key does not need the `voices_read` permission.
 - `VITE_ELEVENLABS_MODEL_ID` — optional, defaults to `eleven_flash_v2_5`.
