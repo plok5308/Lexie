@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LEXIE Game · 모자를 찾아라</title>
+  </head>
+  <body>
+    <main id="app">
+      <section class="shell">
+        <header>
+          <p class="eyebrow">LEXIE Game</p>
+          <h1>모자를 찾아라</h1>
+        </header>
+
+        <div class="stage">
+          <img id="sceneImage" class="sceneImage" alt="현재 장면" />
+          <div class="bubble">
+            <p id="npcLine" class="bubbleText">—</p>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="startButton" type="button">게임 시작</button>
+          <button id="stopButton" type="button" disabled>종료</button>
+          <button id="resetButton" type="button" class="secondary">처음부터</button>
+        </div>
+
+        <div id="stateIndicator" class="state state-idle">
+          <span class="stateDot"></span>
+          <span id="stateLabel" class="stateLabel">대기 중</span>
+        </div>
+
+        <p id="status" class="status">게임 시작 버튼을 눌러주세요.</p>
+
+        <label class="transcriptLabel" for="transcript">방금 말한 내용</label>
+        <textarea id="transcript" readonly placeholder="마이크로 말하면 여기에 표시됩니다."></textarea>
+
+        <label class="transcriptLabel" for="conversationLog">대화 기록</label>
+        <textarea id="conversationLog" readonly placeholder="게임 진행이 누적되어 표시됩니다."></textarea>
+
+        <audio id="ttsPlayer" controls></audio>
+      </section>
+    </main>
+    <script type="module" src="/src/app.ts"></script>
+  </body>
+</html>

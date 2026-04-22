@@ -18,6 +18,7 @@ Examples:
 ## Structure
 
 - `mac/` : macOS applications
+- `mac_game/` : voice-game demo (STT + LLM judge + TTS)
 - `mobile/` : iPhone / Android application
 - `playground/` : testing and experimentation app
 
