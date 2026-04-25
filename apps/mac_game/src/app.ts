@@ -1,9 +1,9 @@
 import { createVadSttModule, SttError } from "../../../packages/stt/src";
 import { LlmError } from "../../../packages/llm/src";
 import { createTtsProvider, TtsError } from "../../../packages/tts/src";
-import { Game } from "./game";
+import { GameEngine, listGames, getDefaultGameId } from "./engine";
+import type { SceneFrame } from "./engine";
 import { Judge } from "./judge";
-import type { Scene } from "./scenes";
 import "./styles.css";
 
 const startButton = getElement<HTMLButtonElement>("startButton");
@@ -17,6 +17,8 @@ const npcLineEl = getElement<HTMLElement>("npcLine");
 const transcriptText = getElement<HTMLTextAreaElement>("transcript");
 const conversationLog = getElement<HTMLTextAreaElement>("conversationLog");
 const audioPlayer = getElement<HTMLAudioElement>("ttsPlayer");
+const gameTitle = getElement<HTMLHeadingElement>("gameTitle");
+const gameSelect = getElement<HTMLSelectElement>("gameSelect");
 
 type UiState = "idle" | "listening" | "hearing" | "thinking" | "speaking" | "error";
 
@@ -29,7 +31,15 @@ const stateMeta: Record<UiState, { label: string }> = {
   error: { label: "오류" },
 };
 
-const game = new Game();
+const games = listGames();
+if (games.length === 0) {
+  throw new Error("등록된 게임이 없습니다. /editor.html 에서 게임을 추가해주세요.");
+}
+
+const initialGameId = pickInitialGameId();
+
+let engine = new GameEngine(initialGameId);
+let currentScene: SceneFrame = engine.start();
 const judge = new Judge();
 const tts = createTtsProvider();
 
@@ -60,7 +70,15 @@ const stt = createVadSttModule({
   },
 });
 
-renderScene(game.current());
+renderGameHeader(initialGameId);
+renderScene(currentScene);
+
+gameSelect.addEventListener("change", () => {
+  const next = gameSelect.value;
+  const url = new URL(window.location.href);
+  url.searchParams.set("game", next);
+  window.location.href = url.toString();
+});
 
 startButton.addEventListener("click", async () => {
   startButton.disabled = true;
@@ -72,8 +90,8 @@ startButton.addEventListener("click", async () => {
 
     setState("speaking");
     setStatus("NPC가 말하는 중...");
-    appendLog("NPC", game.current().openingLine);
-    await speak(game.current().openingLine);
+    appendLog("NPC", currentScene.openingLine);
+    await speak(currentScene.openingLine);
 
     setState("listening");
     setStatus("말하면 자동으로 감지합니다.");
@@ -93,8 +111,8 @@ stopButton.addEventListener("click", () => {
 });
 
 resetButton.addEventListener("click", async () => {
-  const scene = game.reset();
-  renderScene(scene);
+  currentScene = engine.reset();
+  renderScene(currentScene);
   conversationLog.value = "";
   transcriptText.value = "";
   audioPlayer.removeAttribute("src");
@@ -111,16 +129,14 @@ resetButton.addEventListener("click", async () => {
   }
 
   setState("speaking");
-  appendLog("NPC", scene.openingLine);
-  await speak(scene.openingLine);
+  appendLog("NPC", currentScene.openingLine);
+  await speak(currentScene.openingLine);
   setState("listening");
   setStatus("말하면 자동으로 감지합니다.");
 });
 
 async function handleUtterance(userText: string): Promise<void> {
-  if (!userText.trim() || turnInFlight) {
-    return;
-  }
+  if (!userText.trim() || turnInFlight) return;
 
   turnInFlight = true;
   stt.pause();
@@ -130,24 +146,26 @@ async function handleUtterance(userText: string): Promise<void> {
   try {
     setState("thinking");
     setStatus("NPC가 생각 중...");
-    const scene = game.current();
-    const verdict = await judge.evaluate(scene, userText);
+    const verdict = await judge.evaluate(currentScene, userText);
     appendLog("NPC", verdict.reply);
 
     setState("speaking");
     setStatus("NPC가 말하는 중...");
     await speak(verdict.reply);
 
-    if (verdict.advance && scene.nextSceneId) {
-      const next = game.advance();
-      renderScene(next);
-      appendLog("NPC", next.openingLine);
+    if (verdict.advance) {
+      const next = engine.advance();
+      if (next) {
+        currentScene = next;
+        renderScene(currentScene);
+        appendLog("NPC", currentScene.openingLine);
 
-      setStatus("다음 장면...");
-      await speak(next.openingLine);
+        setStatus("다음 장면...");
+        await speak(currentScene.openingLine);
+      }
     }
 
-    if (game.isTerminal()) {
+    if (engine.isTerminal()) {
       setState("listening");
       setStatus("게임이 끝났습니다. '처음부터' 로 다시 시작할 수 있어요.");
     } else {
@@ -163,7 +181,28 @@ async function handleUtterance(userText: string): Promise<void> {
   }
 }
 
-function renderScene(scene: Scene): void {
+function pickInitialGameId(): string {
+  const url = new URL(window.location.href);
+  const requested = url.searchParams.get("game");
+  if (requested && games.some((g) => g.id === requested)) return requested;
+  return getDefaultGameId() ?? games[0].id;
+}
+
+function renderGameHeader(gameId: string): void {
+  gameSelect.innerHTML = "";
+  for (const g of games) {
+    const opt = document.createElement("option");
+    opt.value = g.id;
+    opt.textContent = g.title;
+    if (g.id === gameId) opt.selected = true;
+    gameSelect.appendChild(opt);
+  }
+  const current = games.find((g) => g.id === gameId);
+  gameTitle.textContent = current?.title ?? gameId;
+  document.title = `LEXIE Game · ${current?.title ?? gameId}`;
+}
+
+function renderScene(scene: SceneFrame): void {
   sceneImage.src = scene.imagePath;
   sceneImage.alt = scene.id;
   npcLineEl.textContent = scene.openingLine;
@@ -172,23 +211,17 @@ function renderScene(scene: Scene): void {
 async function speak(text: string): Promise<void> {
   const audio = await tts.synthesize({ text });
 
-  if (audio.kind !== "audio_stream" || !audio.stream) {
-    return;
-  }
+  if (audio.kind !== "audio_stream" || !audio.stream) return;
 
   const chunks: Uint8Array[] = [];
   for await (const chunk of audio.stream) {
     chunks.push(chunk);
   }
 
-  if (chunks.length === 0) {
-    return;
-  }
+  if (chunks.length === 0) return;
 
   const blob = new Blob(chunks as BlobPart[], { type: audio.mimeType });
-  if (lastAudioUrl) {
-    URL.revokeObjectURL(lastAudioUrl);
-  }
+  if (lastAudioUrl) URL.revokeObjectURL(lastAudioUrl);
   lastAudioUrl = URL.createObjectURL(blob);
 
   audioPlayer.src = lastAudioUrl;

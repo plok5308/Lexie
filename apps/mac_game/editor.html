@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LEXIE Game · 에디터</title>
+  </head>
+  <body>
+    <main id="editor">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">LEXIE Game Editor</p>
+          <h1 id="gameTitle">—</h1>
+        </div>
+        <div class="topActions">
+          <select id="gameSelect" class="gameSelect"></select>
+          <button id="newGameBtn" type="button" class="secondary">+ 새 게임</button>
+          <button id="deleteGameBtn" type="button" class="danger">게임 삭제</button>
+          <a id="runGameLink" class="linkButton" href="/index.html">🎮 게임 실행</a>
+          <button id="saveButton" type="button">💾 저장</button>
+          <span id="saveStatus" class="saveStatus"></span>
+        </div>
+      </header>
+
+      <label class="field titleField">
+        <span class="fieldLabel">게임 제목</span>
+        <input id="titleInput" type="text" placeholder="게임 제목" />
+      </label>
+
+      <nav class="pager">
+        <button id="prevSceneBtn" type="button" class="secondary">← 이전</button>
+        <span id="sceneCounter" class="counter">— / —</span>
+        <button id="nextSceneBtn" type="button" class="secondary">다음 →</button>
+        <span class="pagerSpacer"></span>
+        <button id="moveUpBtn" type="button" class="secondary">↑ 위로</button>
+        <button id="moveDownBtn" type="button" class="secondary">↓ 아래로</button>
+        <button id="addSceneBtn" type="button">+ 새 장면</button>
+        <button id="deleteSceneBtn" type="button" class="danger">장면 삭제</button>
+      </nav>
+
+      <section class="sceneCard">
+        <div class="row">
+          <label class="field">
+            <span class="fieldLabel">장면 ID</span>
+            <input id="sceneIdInput" type="text" placeholder="예: lostHat" />
+          </label>
+          <label class="field checkboxField">
+            <input id="terminalInput" type="checkbox" />
+            <span>마지막 장면 (terminal)</span>
+          </label>
+        </div>
+
+        <div class="imageBox">
+          <img id="sceneImagePreview" class="sceneImage" alt="장면 이미지" />
+          <div id="imageDrop" class="imageDrop">
+            <p>이미지를 드래그하거나 클릭해서 업로드</p>
+            <p class="hint" id="imagePathHint">아직 이미지가 없습니다.</p>
+            <input id="imageFileInput" type="file" accept="image/*" hidden />
+          </div>
+        </div>
+
+        <label class="field">
+          <span class="fieldLabel">NPC 첫 대사 (TTS로 재생)</span>
+          <textarea id="openingLineInput" rows="2" placeholder="장면이 열릴 때 NPC가 말하는 첫 문장"></textarea>
+        </label>
+
+        <label class="field">
+          <span class="fieldLabel">장면 설명</span>
+          <textarea id="descriptionInput" rows="4" placeholder="이 장면의 상황·배경·정답 위치 등 LLM이 알아야 할 사실"></textarea>
+        </label>
+
+        <label class="field">
+          <span class="fieldLabel">다음 장면으로 넘어가는 조건 (advance=true)</span>
+          <textarea id="advanceConditionInput" rows="4" placeholder="사용자가 어떤 말을 했을 때 advance=true 인지 + 그때 NPC가 어떻게 반응할지"></textarea>
+        </label>
+
+        <div class="otherResponsesBlock">
+          <div class="blockHeader">
+            <span class="fieldLabel">기타 응답 조건 (advance=false)</span>
+            <button id="addOtherResponseBtn" type="button" class="secondary small">+ 조건 추가</button>
+          </div>
+          <div id="otherResponsesList"></div>
+        </div>
+      </section>
+
+      <p id="errorBanner" class="errorBanner" hidden></p>
+    </main>
+    <script type="module" src="/src/editor.ts"></script>
+  </body>
+</html>

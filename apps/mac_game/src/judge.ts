@@ -1,6 +1,6 @@
 import { createLlmAgent } from "../../../packages/llm/src";
 import type { LlmAgent } from "../../../packages/llm/src";
-import type { Scene } from "./scenes";
+import type { SceneFrame } from "./engine";
 
 export interface JudgeVerdict {
   advance: boolean;
@@ -26,7 +26,7 @@ export class Judge {
     this.agent = agent ?? createLlmAgent({ systemPrompt: SYSTEM_PROMPT });
   }
 
-  async evaluate(scene: Scene, userText: string): Promise<JudgeVerdict> {
+  async evaluate(scene: SceneFrame, userText: string): Promise<JudgeVerdict> {
     const prompt = `[장면 설정]
 ${scene.sceneContext}
 ${scene.terminal ? "\n이 장면은 게임의 마지막 장면이므로 advance는 반드시 false 입니다." : ""}
@@ -37,7 +37,7 @@ ${scene.terminal ? "\n이 장면은 게임의 마지막 장면이므로 advance�
 JSON 한 줄만 출력하세요.`;
 
     const response = await this.agent.respond({ userText: prompt });
-    return parseVerdict(response.assistantText, scene.terminal ?? false);
+    return parseVerdict(response.assistantText, scene.terminal);
   }
 }
 

@@ -38,9 +38,40 @@ textarea {
 }
 
 h1 {
-  margin: 0 0 20px;
+  margin: 0;
   font-size: 30px;
   line-height: 1.1;
+}
+
+.gameHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.gamePicker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #52616b;
+}
+
+.gamePickerLabel {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.gamePicker select {
+  border: 1px solid #c7cdd1;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #ffffff;
+  font: inherit;
+  min-width: 160px;
 }
 
 .stage {

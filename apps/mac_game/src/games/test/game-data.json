@@ -1,0 +1,14 @@
+{
+  "title": "test",
+  "scenes": [
+    {
+      "id": "scene1",
+      "image": "",
+      "openingLine": "",
+      "description": "",
+      "advanceCondition": "",
+      "otherResponses": [],
+      "terminal": false
+    }
+  ]
+}
